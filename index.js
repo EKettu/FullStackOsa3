@@ -5,7 +5,7 @@ const morgan = require('morgan')
 const cors = require('cors')
 
 app.use(cors())
-
+app.use(express.static('build'))
 app.use(bodyParser.json())
 
 morgan.token('info', function getInfo(req) {
@@ -61,7 +61,8 @@ app.post('/api/persons', (request, response) => {
 })
 
 app.get('/', (request, response) => {
-    response.send('<h1>Hello World!</h1>')
+    response.sendFile(path.join(__dirname + '/build/index.html'));
+    //response.send('<h1>Hello World!</h1>')
 })
 
 app.get('/api/persons', (request, response) => {
