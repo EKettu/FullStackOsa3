@@ -4,9 +4,9 @@ const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
 
-app.use(cors())
-app.use(express.static('build'))
+
 app.use(bodyParser.json())
+app.use(cors())
 
 morgan.token('info', function getInfo(req) {
     return JSON.stringify(req.body)
@@ -14,6 +14,9 @@ morgan.token('info', function getInfo(req) {
 
 //app.use(morgan('tiny'))
 app.use(morgan(':method :url :info :status :res[content-length] - :response-time ms'))
+
+
+app.use(express.static('build'))
 
 let persons = [
     {
