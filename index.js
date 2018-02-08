@@ -86,7 +86,6 @@ app.put('/api/persons/:id', (request, response) => {
     Person
         .findByIdAndUpdate(request.params.id, request.body)
         .then(() => {
-            console.log('täällä')
             response.status(200).end()
         })
         .catch(error => {

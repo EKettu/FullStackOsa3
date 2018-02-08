@@ -6,6 +6,8 @@ if (process.env.NODE_ENV !== 'production') {
 
 const url = process.env.MONGODB_URI
 
+mongoose.connect(url)
+
 const personSchema = new mongoose.Schema({
     name: String,
     number: String
