@@ -3,96 +3,106 @@ const app = express()
 const bodyParser = require('body-parser')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 
 
 app.use(bodyParser.json())
 app.use(cors())
 
-morgan.token('info', function getInfo(req) {
+morgan.token('info', getInfo = (req, res) => {
     return JSON.stringify(req.body)
 })
 
-//app.use(morgan('tiny'))
 app.use(morgan(':method :url :info :status :res[content-length] - :response-time ms'))
-
-
 app.use(express.static('build'))
-
-let persons = [
-    {
-        name: "Arto Hellas",
-        number: "040-123456",
-        id: 1
-    },
-    {
-        name: "Martti Tienari",
-        number: "040-123456",
-        id: 2
-    },
-    {
-        name: "Arto Järvinen",
-        number: "040-123456",
-        id: 3
-    },
-    {
-        name: "Lea Kutvonen",
-        number: "040-123456",
-        id: 4
-    }
-]
 
 app.post('/api/persons', (request, response) => {
     const body = request.body
-    const id = Math.floor(Math.random() * 1000)
 
     if (body.name === undefined || body.number === undefined) {
         return response.status(400).json({ error: 'missing name or number' })
     }
-    if (persons.find(person => person.name === body.name)) {
-        return response.status(400).json({ error: 'name must be unique' })
-    }
+    Person.findOne({ name: body.name })
+        .then(person => {
+            if (person) {
+                return response.status(400).json({ error: 'name must be unique' }).end()
+            }
+            const newPerson = new Person(
+                {
+                    name: body.name,
+                    number: body.number
+                })
 
-    const person = {
-        name: body.name,
-        number: body.number,
-        id: id
-    }
-
-    persons = persons.concat(person)
-
-    response.json(person)
-})
-
-app.get('/', (request, response) => {
-    response.sendFile(path.join(__dirname + '/build/index.html'));
-    //response.send('<h1>Hello World!</h1>')
+            newPerson
+                .save()
+                .then(savedPerson => {
+                    response.json(Person.format(savedPerson))
+                })
+                .catch(error => {
+                    console.log(error)
+                })
+        }
+        )
 })
 
 app.get('/api/persons', (request, response) => {
-    response.json(persons)
+    Person
+        .find({}, { __v: 0 })
+        .then(persons => {
+            response.json(persons.map(Person.format))
+        })
+        .catch(error => {
+            console.log(error)
+
+        })
 })
 
 app.get('/info', (request, response) => {
-    const length = persons.length
-    const today = new Date()
-    response.send('<div>puhelinluettelossa on ' + length + ' henkilön tiedot </div><div>' + today + '</div>')
+    Person
+        .find({}, { __v: 0 })
+        .then(persons => {
+            const length = persons.length
+            const today = new Date()
+            response.send('<div>puhelinluettelossa on ' + length + ' henkilön tiedot </div><div>' + today + '</div>')
+        })
+        .catch(error => {
+            console.log(error)
+        })
+
 })
 
 app.get('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    const person = persons.find(person => person.id === id)
-    if (person) {
-        response.json(person)
-    } else {
-        response.status(404).end()
-    }
+    Person
+        .findById(request.params.id)
+        .then(person => {
+            response.json(Person.format(person))
+        })
+        .catch(error => {
+            console.log(error)
+        })
+})
+
+app.put('/api/persons/:id', (request, response) => {
+    Person
+        .findByIdAndUpdate(request.params.id, request.body)
+        .then(() => {
+            console.log('täällä')
+            response.status(200).end()
+        })
+        .catch(error => {
+            console.log(error)
+        })
 })
 
 app.delete('/api/persons/:id', (request, response) => {
-    const id = Number(request.params.id)
-    persons = persons.filter(person => person.id !== id)
-
-    response.status(204).end()
+    Person
+        .findByIdAndRemove(request.params.id)
+        .then(() => {
+            response.status(200).end()
+        })
+        .catch(error => {
+            console.log(error)
+        })
 })
 
 const PORT = process.env.PORT || 3001
