@@ -4,6 +4,8 @@
 # testing
 /coverage
 
+/build #remove for Heroku!
+
 # misc
 .DS_Store
 .env
